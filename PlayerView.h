@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "EntireTerrain.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 #include "PlayerViewer.generated.h"
 
 UCLASS()
@@ -51,6 +53,9 @@ public:
 	UFUNCTION()
 		void LeftMouse();
 
+	UPROPERTY()
+		TSubclassOf<UUserWidget> TileUIClass;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -68,6 +73,9 @@ private:
 		bool bShiftDown = false;
 	UPROPERTY()
 		bool bMouseWheelDown = false;
+
+	UPROPERTY()
+		FVector2D CurrentTile;
 
 public:	
 	// Called every frame

@@ -32,9 +32,15 @@ AEntireTerrain::AEntireTerrain()
 	ConstructorHelpers::FObjectFinder<UTexture2D> FactionImageRef(TEXT("Texture2D'/Game/Data/FactionsMap.FactionsMap'")); //The map is what the terrain is based on.
 	MapImage = MapImageRef.Object;
 	FactionImage = FactionImageRef.Object;
-	const FColor* FormatedImageData = static_cast<const FColor*>(MapImage->PlatformData->Mips[0].BulkData.LockReadOnly());
-	const FColor* FormatedImageDataFac = static_cast<const FColor*>(FactionImage->PlatformData->Mips[0].BulkData.LockReadOnly());
 
+	MapImage->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
+	//MapImage->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+	MapImage->SRGB = false;
+	MapImage->UpdateResource();
+
+	const FColor* FormatedImageData = static_cast<const FColor*>(MapImage->PlatformData->Mips[0].BulkData.LockReadOnly()); //Looks like this code won't work because miplevels don't always exist
+	const FColor* FormatedImageDataFac = static_cast<const FColor*>(FactionImage->PlatformData->Mips[0].BulkData.LockReadOnly());
+	//const FColor* FormatedImageData2 = static_cast<const FColor*>(MapImage->PlatformData->);
 	//TArray<UDecalComponent*> Decals;
 
 	FString NameSet;
@@ -44,9 +50,9 @@ AEntireTerrain::AEntireTerrain()
 	int NameSetTemp2;
 	FName NameLast2;
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("length %i"), Factions.Num()));
-	for (size_t i = 0; i < MapImage->GetSizeX(); i++)
+	for (size_t i = 0; int(i) < MapImage->GetSizeX(); i++)
 	{
-		for (size_t j = 0; j < MapImage->GetSizeY(); j++)
+		for (size_t j = 0; int(j) < MapImage->GetSizeY(); j++)
 		{
 			FColor PixelColour = FormatedImageData[j * MapImage->GetSizeX() + i];
 			//"000000FF" != PixelColour.ToHex() && "0026FFFF" != PixelColour.ToHex() &&
@@ -112,7 +118,7 @@ void AEntireTerrain::BeginPlay()
 
 
 	TArray<FString> ValidColours;
-	for (size_t i = 0; i < Factions.Num(); i++)
+	for (size_t i = 0; int(i) < Factions.Num(); i++)
 	{
 		ValidColours.Add(Factions[i]->ColourValue);
 	}
@@ -121,9 +127,9 @@ void AEntireTerrain::BeginPlay()
 
 
 	int counter = 0;
-	for (size_t i = 0; i < FactionImage->GetSizeX(); i++)
+	for (size_t i = 0; int(i) < FactionImage->GetSizeX(); i++)
 	{
-		for (size_t j = 0; j < FactionImage->GetSizeY(); j++)
+		for (size_t j = 0; int(j) < FactionImage->GetSizeY(); j++)
 		{
 			if (ValidXY.Contains(FVector2D(i,j)))
 			{
@@ -163,6 +169,7 @@ void AEntireTerrain::FactionsAssignData()
 	Factions[0]->Culture = "Aes Raega";
 	Factions[0]->ColourValue = "FF0000FF";
 	Factions[0]->Money = 15000;
+	Factions[0]->bPlayerControlled = true; //This is only for testing and should be taken out later.
 
 	Factions[1]->Name = FText::FromString(ANSI_TO_TCHAR("Lekoa"));
 	Factions[1]->Culture = "Lekoan";

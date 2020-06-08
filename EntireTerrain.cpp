@@ -1,3 +1,6 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
 #include "EntireTerrain.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/Material.h"
@@ -6,6 +9,7 @@
 #include "Materials/Material.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/Engine.h"
 
 
@@ -65,6 +69,9 @@ AEntireTerrain::AEntireTerrain()
 				Decals[Decals.Num() - 1]->SetWorldRotation(FRotator(90, 0, 0));
 				Decals[Decals.Num() - 1]->SetWorldLocation(FVector(128 * i, 128 * j, 0));
 				Decals[Decals.Num() - 1]->SetDecalMaterial(MaterialRef.Object);
+			
+				
+				ValidXY.Add(FVector2D(i, j));
 			}
 			//It might be more efficient to continously spawn the decals based on what the player can see.
 		}
@@ -75,13 +82,32 @@ AEntireTerrain::AEntireTerrain()
 
 }
 
+int FindFactionColour(TArray<AFactionController*> Factions, FString colour) //Finds the last valid colour
+{
+	int idx = 0;
+	for (size_t i = 0; int(i) < Factions.Num(); i++)
+	{
+		if (Factions[i]->ColourValue == colour)
+		{
+			idx = i;
+		}
+	}
+
+	return idx;
+}
+
 // Called when the game starts or when spawned
 void AEntireTerrain::BeginPlay()
 {
 	Super::BeginPlay();
 	//Must first spawn the factions
 	FActorSpawnParameters SpawnParams;
-	Factions.Add(GetWorld()->SpawnActor<AFactionController>(FVector(0,0,0),FRotator(0,0,0)));
+	for (size_t i = 0; i < 6; i++)
+	{
+		Factions.Add(GetWorld()->SpawnActor<AFactionController>(FVector(0, 0, 0), FRotator(0, 0, 0)));
+		Factions[i]->DecalRefs = Decals;
+	}
+
 	FactionsAssignData();
 
 
@@ -94,15 +120,34 @@ void AEntireTerrain::BeginPlay()
 	const FColor* FormatedImageDataFac = static_cast<const FColor*>(FactionImage->PlatformData->Mips[0].BulkData.LockReadOnly());
 
 
-
+	int counter = 0;
 	for (size_t i = 0; i < FactionImage->GetSizeX(); i++)
 	{
 		for (size_t j = 0; j < FactionImage->GetSizeY(); j++)
 		{
-			FColor PixelColour = FormatedImageDataFac[j * MapImage->GetSizeX() + i];
-			if (PixelColour.ToHex() != "FF0000FF")
+			if (ValidXY.Contains(FVector2D(i,j)))
 			{
-				Decals[j * MapImage->GetSizeX() + i]->SetHiddenInGame(true);
+				FColor PixelColour = FormatedImageDataFac[j * MapImage->GetSizeX() + i];
+				if (! ValidColours.Contains(PixelColour.ToHex()) )
+				{
+					Decals[counter]->SetHiddenInGame(true);
+				}
+				else
+				{
+					UMaterialInstanceDynamic* DecalVarianceMaterialInstance = Decals[counter]->CreateDynamicMaterialInstance(); //Setting up colours
+					if (DecalVarianceMaterialInstance != nullptr) 
+					{
+						
+						DecalVarianceMaterialInstance->SetScalarParameterValue(FName("Green"), PixelColour.ReinterpretAsLinear().G);
+						DecalVarianceMaterialInstance->SetScalarParameterValue(FName("Blue"), PixelColour.ReinterpretAsLinear().B);
+						DecalVarianceMaterialInstance->SetScalarParameterValue(FName("Red"), PixelColour.ReinterpretAsLinear().R);
+						
+
+
+					}
+				}
+				counter += 1;
+				Factions[FindFactionColour(Factions, PixelColour.ToHex())]->OwnedTiles.Add(FVector2D(i,j)); //Adds tiles to factions.
 			}
 		}
 	}
@@ -119,6 +164,31 @@ void AEntireTerrain::FactionsAssignData()
 	Factions[0]->ColourValue = "FF0000FF";
 	Factions[0]->Money = 15000;
 
+	Factions[1]->Name = FText::FromString(ANSI_TO_TCHAR("Lekoa"));
+	Factions[1]->Culture = "Lekoan";
+	Factions[1]->ColourValue = "7F0000FF";
+	Factions[1]->Money = 18000;
+
+	Factions[2]->Name = FText::FromString(ANSI_TO_TCHAR("Iefrone"));
+	Factions[2]->Culture = "WestElf";
+	Factions[2]->ColourValue = "B6FF00FF";
+	Factions[2]->Money = 8500;
+
+	Factions[3]->Name = FText::FromString(ANSI_TO_TCHAR("Thainburi"));
+	Factions[3]->Culture = "Thaenbrian";
+	Factions[3]->ColourValue = "3F7F47FF";
+	Factions[3]->Money = 3250;
+
+	Factions[4]->Name = FText::FromString(ANSI_TO_TCHAR("CeawThain"));
+	Factions[4]->Culture = "Thaenbrian";
+	Factions[4]->ColourValue = "9F845BFF";
+	Factions[4]->Money = 1250;
+
+	Factions[5]->Name = FText::FromString(ANSI_TO_TCHAR("Frithain"));
+	Factions[5]->Culture = "Thaenbrian";
+	Factions[5]->ColourValue = "4E563AFF";
+	Factions[5]->Money = 2000;
+
 
 }
 
@@ -134,3 +204,4 @@ void AEntireTerrain::Tick(float DeltaTime)
 	}
 
 }
+

@@ -1,3 +1,6 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
 #include "PlayerViewer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
@@ -7,6 +10,10 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/EngineTypes.h"
 #include "FactionController.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
+#include "NEAGame/Public/PlayerWidgetMediator.h"
+
 
 // Sets default values
 APlayerViewer::APlayerViewer()
@@ -16,6 +23,7 @@ APlayerViewer::APlayerViewer()
 	UCameraComponent* PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Player Camera"));
 	RootComponent = PlayerCamera;
 	PlayerCamera->SetWorldRotation(FRotator(-45,0,0));
+
 
 }
 void APlayerViewer::Shift()
@@ -95,23 +103,38 @@ void APlayerViewer::LeftMouse()
 
 	if (TerrainActor->ValidXY.Contains(ClickedTile))
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Some variable values: x: %f, y: %f"), HitData.Location.X / 128 + 0.5, HitData.Location.Y / 128 + 0.5));
-		
 		//This also needs to be in begin play.
 		TArray<AActor*> Factions; //Make this code better when in correct place.
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFactionController::StaticClass(), Factions);
 		AFactionController* FactionRef;
 		int idx = -1;
-		for (size_t i = 0; i < Factions.Num(); i++)
+		for (size_t i = 0; int(i) < Factions.Num(); i++)
 		{
+
 			FactionRef = (AFactionController*)Factions[i];
 			if (FactionRef->OwnedTiles.Contains(ClickedTile))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Some variable values: x: %f, y: %f"), HitData.Location.X / 128 + 0.5, HitData.Location.Y / 128 + 0.5));
+				idx = int(i);
 			}
 		}
-	
-	}
+		FactionRef = (AFactionController*)Factions[idx];
 
+		//Might as well reuse the TerrainActorTemp Variable
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerWidgetMediator::StaticClass(), TerrainActorTemp);
+		APlayerWidgetMediator* WidgetRef = (APlayerWidgetMediator*)TerrainActorTemp[0];
+		if (FactionRef->bPlayerControlled)
+		{
+			if (WidgetRef->bTileViewOpen)
+			{
+				WidgetRef->RemoveTileUI();
+			}
+			else
+			{
+				WidgetRef->SpawnTileUI();
+			}
+		}
+		//A diplomacy screen should be spawned, early on this will just be for war and peace but later maybe trade, alliances and vassals.
+	}
 }
 
 
@@ -181,3 +204,4 @@ void APlayerViewer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("LeftMouse", IE_Pressed, this, &APlayerViewer::LeftMouse);
 }
+

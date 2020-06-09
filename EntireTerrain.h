@@ -39,6 +39,11 @@ public:
 	UPROPERTY()
 		TArray<int> Population; 
 	UPROPERTY()
+		TArray<int> Manpower;
+	UPROPERTY()
+		TArray<FString> TerrainTypes;
+
+	UPROPERTY()
 		TArray<float> Wealth;
 	UPROPERTY()
 		TArray<FString> Resource;
@@ -51,9 +56,15 @@ public:
 	UPROPERTY(EditAnywhere)
 		UTexture2D* FactionImage;
 	UPROPERTY(EditAnywhere)
+		UTexture2D* PopulationMap;
+	UPROPERTY(EditAnywhere)
 		TArray<AFactionController*> Factions;
 	UPROPERTY(EditAnywhere)
 		TArray<UDecalComponent*> Decals;
+
+
+	UFUNCTION()
+		void PopulationTick(int idx);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

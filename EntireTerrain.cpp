@@ -25,21 +25,23 @@ AEntireTerrain::AEntireTerrain()
 	//Right so I'm going to make it so that probably around 100 materials are created.
 	//What I'm going to try now is decals, they atleast somewhat work for blueprints.
 	//UDecalComponent* FirstDecal;
-	//FirstDecal = CreateAbstractDefaultSubobject<UDecalComponent>("Decal1");
-	//FirstDecal->SetWorldRotation(FRotator(90,0,0));
 	ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("Material'/Game/Data/RedDecalMat.RedDecalMat'")); //The map is what the terrain is based on.
 	ConstructorHelpers::FObjectFinder<UTexture2D> MapImageRef(TEXT("Texture2D'/Game/Data/map3.map3'")); //The map is what the terrain is based on.
 	ConstructorHelpers::FObjectFinder<UTexture2D> FactionImageRef(TEXT("Texture2D'/Game/Data/FactionsMap.FactionsMap'")); //The map is what the terrain is based on.
+	ConstructorHelpers::FObjectFinder<UTexture2D> PopulationMapRef(TEXT("Texture2D'/Game/Data/PopulationMap.PopulationMap'")); //The map is what the terrain is based on.
 	MapImage = MapImageRef.Object;
 	FactionImage = FactionImageRef.Object;
+	PopulationMap = PopulationMapRef.Object;
 
 	MapImage->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
 	//MapImage->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
 	MapImage->SRGB = false;
 	MapImage->UpdateResource();
 
-	const FColor* FormatedImageData = static_cast<const FColor*>(MapImage->PlatformData->Mips[0].BulkData.LockReadOnly()); //Looks like this code won't work because miplevels don't always exist
+	const FColor* FormatedImageData = static_cast<const FColor*>(MapImage->PlatformData->Mips[0].BulkData.LockReadOnly()); //Looks like this code won't work because miplevels don't always exist but only on build
 	const FColor* FormatedImageDataFac = static_cast<const FColor*>(FactionImage->PlatformData->Mips[0].BulkData.LockReadOnly());
+	const FColor* FormatedPopulationData = static_cast<const FColor*>(PopulationMap->PlatformData->Mips[0].BulkData.LockReadOnly());
+
 	//const FColor* FormatedImageData2 = static_cast<const FColor*>(MapImage->PlatformData->);
 	//TArray<UDecalComponent*> Decals;
 
@@ -49,12 +51,13 @@ AEntireTerrain::AEntireTerrain()
 	FString NameSet2;
 	int NameSetTemp2;
 	FName NameLast2;
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("length %i"), Factions.Num()));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("length %i"), Factions.Num()))
 	for (size_t i = 0; int(i) < MapImage->GetSizeX(); i++)
 	{
 		for (size_t j = 0; int(j) < MapImage->GetSizeY(); j++)
 		{
 			FColor PixelColour = FormatedImageData[j * MapImage->GetSizeX() + i];
+			FColor PopulationColourValue = FormatedPopulationData[j* MapImage->GetSizeX() + i];
 			//"000000FF" != PixelColour.ToHex() && "0026FFFF" != PixelColour.ToHex() &&
 
 			if ("000000FF" != PixelColour.ToHex() && "0026FFFF" != PixelColour.ToHex()) //If the map is black then it is a mountain so no tile should be generated.
@@ -69,6 +72,15 @@ AEntireTerrain::AEntireTerrain()
 				NameSet += NameSet2;
 				NameLast = FName(*NameSet);
 
+				if (PopulationColourValue.R > 0)
+				{
+					Population.Add(pow(PopulationColourValue.R * 5, 1.6) + rand() % 120);
+				}
+				else
+				{
+					Population.Add(pow(PopulationColourValue.R * 5, 1.6));
+				}
+				Manpower.Add(trunc(Population[Population.Num()-1] / 3));
 
 				Decals.Add(CreateDefaultSubobject<UDecalComponent>(NameLast));
 				Decals[Decals.Num() - 1]->SetWorldScale3D(FVector(1.15, 0.25, 0.25));
@@ -84,9 +96,12 @@ AEntireTerrain::AEntireTerrain()
 	}
 	MapImage->PlatformData->Mips[0].BulkData.Unlock();
 	FactionImage->PlatformData->Mips[0].BulkData.Unlock();
+	PopulationMap->PlatformData->Mips[0].BulkData.Unlock();
 
 
 }
+
+
 
 int FindFactionColour(TArray<AFactionController*> Factions, FString colour) //Finds the last valid colour
 {
@@ -102,10 +117,58 @@ int FindFactionColour(TArray<AFactionController*> Factions, FString colour) //Fi
 	return idx;
 }
 
+void AEntireTerrain::PopulationTick(int idx)
+{
+	//Wealth should be exprected to be at about 20 on average
+	int change;
+	//Assume a default incrase of 1% with a possible great random increase.
+	float Coef;
+	Coef = 0.01;
+
+	if (Resource[idx] == "Livestock" || Resource[idx] == "Fish")
+	{
+		Coef += 0.005;
+	}
+
+	if (TerrainTypes[idx] == "DeepForest" || TerrainTypes[idx] == "RuggedHills" || TerrainTypes[idx] == "Swamp")
+	{
+		Coef -= 0.005;
+	}
+
+	if (Population[idx] > 65,000)
+	{
+		//This will result in a population decrease as over 65,000 should decrease population.
+		change = Population[idx] / Coef; change = change * ( 1/ (Wealth[idx] /20));
+		Population[idx] = Population[idx] - trunc((change * (1 + rand()% 1)));
+	}
+	else
+	{
+		//Since populations that colonise new lands usually increase very quickly 
+		if (Population[idx] < 250 && TerrainTypes[idx] != "DeepForest" && TerrainTypes[idx] != "Mountain" && TerrainTypes[idx] != "Swamp")
+		{
+			change = Population[idx] / 3*Coef; change = change * ((Wealth[idx] / 18));
+			Population[idx] = Population[idx] - trunc((change * (1 + rand() % 1)));
+		}
+		else if(Population[idx] < 300)
+		{
+			change = Population[idx] / Coef; change = change * ((Wealth[idx] / 25));
+			Population[idx] = Population[idx] - trunc((change * (1 + rand() % 1)));
+		}
+		else
+		{
+			change = Population[idx] / 2*Coef; change = change * ((Wealth[idx] / 20));
+			Population[idx] = Population[idx] - trunc((change * (1 + rand() % 1)));
+		}
+	}
+
+}
+
 // Called when the game starts or when spawned
 void AEntireTerrain::BeginPlay()
 {
 	Super::BeginPlay();
+
+
 	//Must first spawn the factions
 	FActorSpawnParameters SpawnParams;
 	for (size_t i = 0; i < 6; i++)

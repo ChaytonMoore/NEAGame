@@ -97,7 +97,7 @@ void APlayerViewer::LeftMouse()
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(CollChan,false,HitData);
 	FVector2D ClickedTile = FVector2D(trunc(HitData.Location.X / 128 + 0.5), trunc(HitData.Location.Y / 128 + 0.5));
 
-	AEntireTerrain* TerrainActor;TArray<AActor*> TerrainActorTemp; //Put this in begin play.
+	AEntireTerrain* TerrainActor;TArray<AActor*> TerrainActorTemp; //Put this in begin play. //Remove later
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEntireTerrain::StaticClass(), TerrainActorTemp);
 	TerrainActor = (AEntireTerrain*)TerrainActorTemp[0];
 
@@ -126,11 +126,32 @@ void APlayerViewer::LeftMouse()
 		{
 			if (WidgetRef->bTileViewOpen)
 			{
-				WidgetRef->RemoveTileUI();
+				if (ClickedTile == WidgetRef->TilePosition)
+				{
+					WidgetRef->RemoveTileUI();
+				}
+				else
+				{
+					WidgetRef->SpawnTileUI();
+					//WidgetRef->Population = EntireTerrainRef->Population[ClickedTile.X * EntireTerrainRef->XSize + ClickedTile.Y];
+					int idxT = EntireTerrainRef->ValidXY.Find(ClickedTile);
+					WidgetRef->Population = EntireTerrainRef->Population[idxT];
+					WidgetRef->Manpower = EntireTerrainRef->Manpower[idxT];
+					//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Some variable values: x: %i"), EntireTerrainRef->Population[idxT]));
+
+					WidgetRef->TilePosition = ClickedTile;
+				}
 			}
 			else
 			{
 				WidgetRef->SpawnTileUI();
+				//WidgetRef->Population = EntireTerrainRef->Population[ClickedTile.X * EntireTerrainRef->XSize + ClickedTile.Y];
+				int idxT = EntireTerrainRef->ValidXY.Find(ClickedTile);
+				WidgetRef->Population = EntireTerrainRef->Population[idxT];
+				WidgetRef->Manpower = EntireTerrainRef->Manpower[idxT];
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Some variable values: x: %i"), EntireTerrainRef->Population[idxT]));
+			
+				WidgetRef->TilePosition = ClickedTile;
 			}
 		}
 		//A diplomacy screen should be spawned, early on this will just be for war and peace but later maybe trade, alliances and vassals.
@@ -143,6 +164,10 @@ void APlayerViewer::BeginPlay()
 {
 	Super::BeginPlay();
 	GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+
+	TArray<AActor*> TempActors; //Setting the reference to the EntireTerrainObject
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEntireTerrain::StaticClass(),TempActors);
+	EntireTerrainRef = (AEntireTerrain*)TempActors[0];
 
 
 }
@@ -204,4 +229,3 @@ void APlayerViewer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("LeftMouse", IE_Pressed, this, &APlayerViewer::LeftMouse);
 }
-

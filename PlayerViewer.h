@@ -7,6 +7,7 @@
 #include "EntireTerrain.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
+#include "EntireTerrain.h"
 #include "PlayerViewer.generated.h"
 
 UCLASS()
@@ -76,6 +77,9 @@ private:
 
 	UPROPERTY()
 		FVector2D CurrentTile;
+
+	UPROPERTY()
+		AEntireTerrain* EntireTerrainRef;
 
 public:	
 	// Called every frame

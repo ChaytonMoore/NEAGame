@@ -137,6 +137,7 @@ void APlayerViewer::LeftMouse()
 					int idxT = EntireTerrainRef->ValidXY.Find(ClickedTile);
 					WidgetRef->Population = EntireTerrainRef->Population[idxT];
 					WidgetRef->Manpower = EntireTerrainRef->Manpower[idxT];
+					WidgetRef->Culture = EntireTerrainRef->TileCulture[idxT];
 					//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Some variable values: x: %i"), EntireTerrainRef->Population[idxT]));
 
 					WidgetRef->TilePosition = ClickedTile;
@@ -149,9 +150,17 @@ void APlayerViewer::LeftMouse()
 				int idxT = EntireTerrainRef->ValidXY.Find(ClickedTile);
 				WidgetRef->Population = EntireTerrainRef->Population[idxT];
 				WidgetRef->Manpower = EntireTerrainRef->Manpower[idxT];
+				WidgetRef->Culture = EntireTerrainRef->TileCulture[idxT];
 				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Some variable values: x: %i"), EntireTerrainRef->Population[idxT]));
 			
 				WidgetRef->TilePosition = ClickedTile;
+			}
+		}
+		else
+		{
+			if (WidgetRef)
+			{
+				WidgetRef->RemoveTileUI();
 			}
 		}
 		//A diplomacy screen should be spawned, early on this will just be for war and peace but later maybe trade, alliances and vassals.
@@ -168,8 +177,6 @@ void APlayerViewer::BeginPlay()
 	TArray<AActor*> TempActors; //Setting the reference to the EntireTerrainObject
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEntireTerrain::StaticClass(),TempActors);
 	EntireTerrainRef = (AEntireTerrain*)TempActors[0];
-
-
 }
 
 // Called every frame

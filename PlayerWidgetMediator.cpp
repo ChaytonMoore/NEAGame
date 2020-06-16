@@ -38,7 +38,13 @@ void APlayerWidgetMediator::RemoveTileUI()
 void APlayerWidgetMediator::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UUserWidget* FactionUI = CreateWidget(GetWorld(), FactionUIClass);
+	//Might want to put the declaration in the .h
+	if (FactionUI)
+	{
+		//Makes the ui element visible, the if statement is required to stop crashes from happening.
+		FactionUI->AddToViewport();
+	}
 }
 
 // Called every frame

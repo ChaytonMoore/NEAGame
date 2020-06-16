@@ -34,7 +34,7 @@ public:
 		int XSize = 80;
 	UPROPERTY(EditAnywhere)
 		int YSize = 100;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 		TArray<FVector2D> ValidXY;
 	UPROPERTY()
 		TArray<int> Population; 
@@ -43,6 +43,8 @@ public:
 	UPROPERTY()
 		TArray<FString> TerrainTypes;
 
+	UPROPERTY()
+		TArray<FString> TileCulture;
 	UPROPERTY()
 		TArray<float> Wealth;
 	UPROPERTY()
@@ -61,7 +63,8 @@ public:
 		TArray<AFactionController*> Factions;
 	UPROPERTY(EditAnywhere)
 		TArray<UDecalComponent*> Decals;
-
+	UPROPERTY(EditAnywhere)
+		TArray<bool> HasArmy;
 
 	UFUNCTION()
 		void PopulationTick(int idx);

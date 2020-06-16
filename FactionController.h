@@ -14,18 +14,22 @@ class NEAGAME_API AFactionController : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AFactionController();
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 		FText Name;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 		FString Culture;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 		FString GovernmentType = "Monarchy"; //Monarchy and republic are the only too I think I'll have but maybe tribal etc.
 	UPROPERTY()
 		FString ColourValue;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 		float Money;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
+		float Income;
+	UPROPERTY(BlueprintReadWrite,EditAnywhere)
 		bool bPlayerControlled;
+	UPROPERTY(BlueprintReadWrite)
+		bool HasMetal;
 
 	UPROPERTY()
 		TArray<FVector2D> OwnedTiles;

@@ -87,9 +87,31 @@ AEntireTerrain::AEntireTerrain()
 				Decals[Decals.Num() - 1]->SetWorldRotation(FRotator(90, 0, 0));
 				Decals[Decals.Num() - 1]->SetWorldLocation(FVector(128 * i, 128 * j, 0));
 				Decals[Decals.Num() - 1]->SetDecalMaterial(MaterialRef.Object);
-			
+
+				
 				
 				ValidXY.Add(FVector2D(i, j));
+				HasArmy.Add(false
+);
+
+				//Now for the cultural assignment based on a map colouring
+				TileCulture.Add("Culture less"); //By default this will be the culture of each tile.
+				if (PixelColour.ToHex() == "FF0000FF")//Pure red just need the opacity as well
+				{
+					TileCulture[TileCulture.Num() - 1] = "Aes Raegan";
+				}
+				if (PixelColour.ToHex() == "FF6A00FF")
+				{
+					TileCulture[TileCulture.Num() - 1] = "Eathwonien";
+				}
+				if (PixelColour.ToHex() == "84994CFF")
+				{
+					TileCulture[TileCulture.Num() - 1] = "Ableten";
+				}
+				if (PixelColour.ToHex() == "7F0000FF")
+				{
+					TileCulture[TileCulture.Num() - 1] = "Lekoan";
+				}
 			}
 			//It might be more efficient to continously spawn the decals based on what the player can see.
 		}

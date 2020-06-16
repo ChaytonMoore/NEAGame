@@ -15,12 +15,15 @@ class NEAGAME_API APlayerWidgetMediator : public AActor
 public:	
 	// Sets default values for this actor's properties
 	APlayerWidgetMediator();
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 		FString Culture;
 	
 	//Since we can't use constructors to reference widgets I'll have to spawn this class to generate widgets based on references placed in the editor.
 	UPROPERTY(EditAnywhere, Category = "Default")
 		TSubclassOf<UUserWidget> TileUIClass;
+
+	UPROPERTY(EditAnywhere, Category = "Default")
+		TSubclassOf<UUserWidget> FactionUIClass;
 
 	UPROPERTY()
 		bool bTileViewOpen;
@@ -34,15 +37,14 @@ public:
 	UPROPERTY()
 		UUserWidget* TileUI;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 		FVector2D TilePosition;
 
 	UFUNCTION()
-		void SpawnTileUI();
+		void SpawnTileUI(); 
 
 	UFUNCTION()
 		void RemoveTileUI();
-
 
 
 protected:
